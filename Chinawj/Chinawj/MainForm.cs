@@ -21,9 +21,13 @@ namespace LeShou
         /// </summary>
         private static string code_url = "";
         /// <summary>
+        /// 登录页地址
+        /// </summary>
+        private static string login_page_url = "http://my.chinawj.com.cn/";
+        /// <summary>
         /// 登录地址
         /// </summary>
-        private static string login_url = "http://my.chinawj.com.cn/";
+        private static string login_url = "http://my.chinawj.com.cn/member/logins.php?act=logins";
         /// <summary>
         /// 删除页地址
         /// </summary>
@@ -63,7 +67,7 @@ namespace LeShou
         /// <param name="e"></param>
         private void btn_open_Click(object sender, EventArgs e)
         {
-            web_loaction(login_url);
+            web_loaction(login_page_url);
         }
         private void login_form_Load(object sender, EventArgs e)
         {
@@ -90,7 +94,7 @@ namespace LeShou
         /// </summary>
         public void init()
         {
-            web_loaction(login_url);
+            web_loaction(login_page_url);
         }
 
 
@@ -103,7 +107,7 @@ namespace LeShou
             string CODE = this.tbx_code.Text;
             if (loginform == null)
             {
-                web_loaction(login_url);
+                web_loaction(login_page_url);
             }
             loginform.GetElementById("UsernameGet").SetAttribute("value", USERID);
             loginform.GetElementById("password").SetAttribute("value", PWD);
@@ -157,7 +161,7 @@ namespace LeShou
             if (webser.ReadyState == WebBrowserReadyState.Complete && webser.IsBusy == false)
             {
                 timer_load.Enabled = false;
-                if (webser.StatusText == "完成" && webser.Url.AbsoluteUri == login_url)
+                if (webser.StatusText == "完成" && webser.Url.AbsoluteUri == login_page_url)
                 {
                     load_img();
                     tbx_userid.Focus();
@@ -420,7 +424,7 @@ namespace LeShou
         {
             int result = 0;
             string url = delete_url;
-        http://my.chinawj.com.cn/member/logistics/?act=del&id[]=22619003&id[]=22619012
+            //http://my.chinawj.com.cn/member/logistics/?act=del&id[]=22619003&id[]=22619012
             Dictionary<string, string> dict = new Dictionary<string, string>();
             for (int i = 0; i < ids.Count; i++)
             {
@@ -436,6 +440,15 @@ namespace LeShou
                 result += Convert.ToInt32(match_nid[i].Groups[1].Value);
             }
             return result;
+        }
+
+        private void btn_test_Click(object sender, EventArgs e)
+        {
+            string USERID = this.tbx_userid.Text;
+            string PWD = this.tbx_pwd.Text;
+            byte[] data = Encoding.UTF8.GetBytes("UsernameGet=" + USERID + "&pwd=" + PWD + "&submit=");
+            byte[] response = RequestByCookie(login_url, cookie, false, data);
+            string html = BytesToString(response);
         }
 
     }

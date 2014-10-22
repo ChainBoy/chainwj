@@ -53,6 +53,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.btn_end = new System.Windows.Forms.Button();
             this.btn_delete = new System.Windows.Forms.Button();
+            this.btn_test = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pic_code)).BeginInit();
             this.panel_login.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -161,6 +162,7 @@
             // 
             // panel_login
             // 
+            this.panel_login.Controls.Add(this.btn_test);
             this.panel_login.Controls.Add(this.label1);
             this.panel_login.Controls.Add(this.btn_login);
             this.panel_login.Controls.Add(this.btn_open);
@@ -289,6 +291,16 @@
             this.btn_delete.UseVisualStyleBackColor = true;
             this.btn_delete.Click += new System.EventHandler(this.btn_delete_Click);
             // 
+            // btn_test
+            // 
+            this.btn_test.Location = new System.Drawing.Point(169, 130);
+            this.btn_test.Name = "btn_test";
+            this.btn_test.Size = new System.Drawing.Size(45, 23);
+            this.btn_test.TabIndex = 12;
+            this.btn_test.Text = "登录";
+            this.btn_test.UseVisualStyleBackColor = true;
+            this.btn_test.Click += new System.EventHandler(this.btn_test_Click);
+            // 
             // login_form
             // 
             this.AcceptButton = this.btn_login;
@@ -344,6 +356,7 @@
         private System.Windows.Forms.Button btn_delete;
         private System.Windows.Forms.NumericUpDown num_up_dowm_delete;
         private System.Windows.Forms.ProgressBar bar_delete;
+        private System.Windows.Forms.Button btn_test;
     }
 }
 
