@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -10,7 +8,7 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Net;
-using System.Threading; 
+using System.Threading;
 
 namespace LeShou
 {
@@ -37,7 +35,7 @@ namespace LeShou
         /// <summary>
         /// 删除地址
         /// </summary>
-        private static string delete_url = "http://leshou.com/my/?comp=news&task=deletenews&nid=";
+        private static string delete_url = "http://my.chinawj.com.cn/member/logistics/?act=del";
         /// <summary>
         /// 每页条数
         /// </summary>
@@ -47,6 +45,7 @@ namespace LeShou
         /// </summary>
         private static string code_path = ".code";
         private string cookie = "";
+        private int bar_num = 0;
 
         public login_form()
         {
@@ -102,9 +101,13 @@ namespace LeShou
             string USERID = this.tbx_userid.Text;
             string PWD = this.tbx_pwd.Text;
             string CODE = this.tbx_code.Text;
-            loginform.GetElementById("username").SetAttribute("value", USERID);
+            if (loginform == null)
+            {
+                web_loaction(login_url);
+            }
+            loginform.GetElementById("UsernameGet").SetAttribute("value", USERID);
             loginform.GetElementById("password").SetAttribute("value", PWD);
-            loginform.GetElementById("code").SetAttribute("value", CODE);
+            //loginform.GetElementById("code").SetAttribute("value", CODE);
         }
 
         /// <summary>检查帐号 密码 验证码</summary>
@@ -117,7 +120,7 @@ namespace LeShou
             string CODE = this.tbx_code.Text;
             if (USERID.Length < 16)
             {
-                MessageBox.Show("请重新输入身份证!");
+                MessageBox.Show("请重新输入帐号!");
                 state = false;
             }
             if (PWD.Length < 6)
@@ -125,11 +128,11 @@ namespace LeShou
                 MessageBox.Show("请重新输入密码!");
                 state = false;
             }
-            if (CODE.Length != 5)
-            {
-                MessageBox.Show("请重新输入验证码!");
-                state = false;
-            }
+            //if (CODE.Length != 5)
+            //{
+            //    MessageBox.Show("请重新输入验证码!");
+            //    state = false;
+            //}
             return state;
         }
 
@@ -138,9 +141,10 @@ namespace LeShou
         /// </summary>
         public void login()
         {
-            HtmlElement check_remeber = loginform.GetElementsByTagName("input")[3];
-            check_remeber.InvokeMember("Click");
-            HtmlElement btnAdd = loginform.GetElementsByTagName("input")[4];
+
+            //HtmlElement check_remeber = loginform.GetElementsByTagName("input")[3];
+            //check_remeber.InvokeMember("Click");
+            HtmlElement btnAdd = loginform.GetElementsByTagName("input")[2];
             btnAdd.InvokeMember("Click");
         }
         private void webser_Navigating(object sender, WebBrowserNavigatingEventArgs e)
@@ -167,8 +171,8 @@ namespace LeShou
         private void load_img()
         {
             loginform = webser.Document.Forms[0].Document;
-            save_image_by_list_byte();
-            this.pic_code.ImageLocation = code_path;
+            //save_image_by_list_byte();
+            //this.pic_code.ImageLocation = code_path;
         }
 
         private void webser_Navigated(object sender, WebBrowserNavigatedEventArgs e)
@@ -195,7 +199,7 @@ namespace LeShou
         /// <param name="url">URL</param>
         /// <param name="cookie">Cookies值</param>
         /// <param name="is_get">request maehod.is get? or false:post.</param>
-        public static byte[] RequestByCookie(string url, string cookie, bool is_get = true)
+        public static byte[] RequestByCookie(string url, string cookie, bool is_get = true, byte[] data = null)
         {
             List<byte> list = new List<byte>();
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
@@ -207,6 +211,22 @@ namespace LeShou
             if (is_get == true) webRequest.Method = "GET";
             else webRequest.Method = "POST";
             webRequest.KeepAlive = true;
+            if (is_get == false && data != null)
+            {
+                try
+                {
+                    //写入请求流
+                    using (Stream stream = webRequest.GetRequestStream())
+                    {
+                        stream.Write(data, 0, data.Length);
+                    }
+                }
+                catch (Exception)
+                {
+
+                }
+
+            }
             try
             {
                 //获取服务器返回的资源
@@ -217,10 +237,10 @@ namespace LeShou
 
                         while (true)
                         {
-                            int data = stream.ReadByte();
-                            if (data == -1)
+                            int data_b = stream.ReadByte();
+                            if (data_b == -1)
                                 break;
-                            list.Add((byte)data);
+                            list.Add((byte)data_b);
                         }
                         //return BytesToImage(list.ToArray());
                         //return System.Drawing.Image.FromFile(".code", true);
@@ -250,6 +270,25 @@ namespace LeShou
             Image image = System.Drawing.Image.FromStream(ms, true);
             ms.Close();
             return image;
+        }
+        public static byte[] DictionaryToBytes(Dictionary<string, string> parameters)
+        {
+            byte[] data = null;
+            StringBuilder buffer = new StringBuilder();
+            int i = 0;
+            foreach (string key in parameters.Keys)
+            {
+                if (i > 0)
+                {
+                    buffer.AppendFormat("&{0}={1}", key, parameters[key]);
+                }
+                else
+                {
+                    buffer.AppendFormat("{0}={1}", key, parameters[key]);
+                }
+                i++;
+            }
+            return Encoding.UTF8.GetBytes(buffer.ToString());
         }
         /// <summary>
         /// Convert Byte[] to string
@@ -281,6 +320,18 @@ namespace LeShou
             }
         }
 
+        private void SetDeleteBarStatus()
+        {
+            if (this.bar_delete.InvokeRequired)
+            {
+                FlushClient fc = new FlushClient(SetDeleteBarStatus);
+                this.Invoke(fc);
+            }
+            else
+            {
+                this.bar_delete.Value = bar_num;
+            }
+        }
         private void GetWebBrowseCookie()
         {
             if (this.webser.InvokeRequired)
@@ -304,9 +355,21 @@ namespace LeShou
             for (int i = 0; i < nead_delete_num; i++)
             {
                 int delete_result = delete_data_by_page(nead_delete_num - has_delete_num, cookie);
-                if (delete_result == -1) break;
+                if (delete_result == -1)
+                {
+                    bar_num = 100;
+                    SetDeleteBarStatus();
+                    break;
+                }
                 has_delete_num += delete_result;
-                if (has_delete_num >= nead_delete_num) break;
+                if (has_delete_num >= nead_delete_num)
+                {
+                    bar_num = 100;
+                    SetDeleteBarStatus();
+                    break;
+                }
+                bar_num = has_delete_num / nead_delete_num * 100;
+                SetDeleteBarStatus();
             }
         }
 
@@ -335,27 +398,42 @@ namespace LeShou
         private List<int> re_page_data_count(string html)
         {
             List<int> l_int = new List<int>();
-            MatchCollection match_nid = Regex.Matches(html, @"deletenews&nid=(\d+)", RegexOptions.Singleline);
+            List<int> result = new List<int>();
+            MatchCollection match_nid = Regex.Matches(html, @"add.php\?id=(\d+)", RegexOptions.Singleline);
             for (int i = 0; i < match_nid.Count; i++)
             {
                 l_int.Add(Convert.ToInt32(match_nid[i].Groups[1].Value));
             }
-            return l_int;
+            foreach (int eachString in l_int)
+            {
+                if (!l_int.Contains(eachString))
+                    l_int.Add(eachString);
+            }
+            return result;
         }
         /// <summary>
-        /// 根据id列表 删除帖子
+        /// 根据id列表 删除帖子id[]:22678338
         /// </summary>
         /// <param name="ids"></param>
         /// <returns></returns>
         private int delete_datas_by_ids(List<int> ids, string cookie = "")
         {
             int result = 0;
+            string url = delete_url;
+        http://my.chinawj.com.cn/member/logistics/?act=del&id[]=22619003&id[]=22619012
+            Dictionary<string, string> dict = new Dictionary<string, string>();
             for (int i = 0; i < ids.Count; i++)
             {
-                string url = delete_url + ids[i];
-                RequestByCookie(url, cookie);
-                Thread.Sleep(20);
-                result++;
+                url += ("&id[]=" + ids[i]);
+            }
+
+            byte[] response = RequestByCookie(url, cookie);
+            //byte[] response = RequestByCookie(delete_url, cookie, false, Encoding.UTF8.GetBytes(id_str));
+            string html = BytesToString(response);
+            MatchCollection match_nid = Regex.Matches(html, @"操作(\d)条成功", RegexOptions.Singleline);
+            for (int i = 0; i < match_nid.Count; i++)
+            {
+                result += Convert.ToInt32(match_nid[i].Groups[1].Value);
             }
             return result;
         }

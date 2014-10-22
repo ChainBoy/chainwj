@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(login_form));
             this.webser = new System.Windows.Forms.WebBrowser();
             this.btn_open = new System.Windows.Forms.Button();
             this.tbx_code = new System.Windows.Forms.TextBox();
@@ -47,6 +48,7 @@
             this.删除ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除ToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.bar_delete = new System.Windows.Forms.ProgressBar();
             this.num_up_dowm_delete = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
             this.btn_end = new System.Windows.Forms.Button();
@@ -118,7 +120,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(35, 37);
+            this.label1.Location = new System.Drawing.Point(37, 39);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(29, 12);
             this.label1.TabIndex = 9;
@@ -127,7 +129,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(35, 64);
+            this.label2.Location = new System.Drawing.Point(37, 66);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(29, 12);
             this.label2.TabIndex = 10;
@@ -136,7 +138,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(35, 92);
+            this.label3.Location = new System.Drawing.Point(37, 94);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(41, 12);
             this.label3.TabIndex = 11;
@@ -170,6 +172,7 @@
             this.panel_login.Controls.Add(this.tbx_pwd);
             this.panel_login.Location = new System.Drawing.Point(12, 26);
             this.panel_login.Name = "panel_login";
+            this.panel_login.Padding = new System.Windows.Forms.Padding(2);
             this.panel_login.Size = new System.Drawing.Size(296, 200);
             this.panel_login.TabIndex = 12;
             // 
@@ -212,14 +215,26 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.bar_delete);
             this.panel1.Controls.Add(this.num_up_dowm_delete);
             this.panel1.Controls.Add(this.label4);
             this.panel1.Controls.Add(this.btn_end);
             this.panel1.Controls.Add(this.btn_delete);
             this.panel1.Location = new System.Drawing.Point(328, 28);
             this.panel1.Name = "panel1";
+            this.panel1.Padding = new System.Windows.Forms.Padding(2);
             this.panel1.Size = new System.Drawing.Size(296, 200);
             this.panel1.TabIndex = 12;
+            // 
+            // bar_delete
+            // 
+            this.bar_delete.Cursor = System.Windows.Forms.Cursors.WaitCursor;
+            this.bar_delete.Location = new System.Drawing.Point(57, 79);
+            this.bar_delete.MarqueeAnimationSpeed = 10;
+            this.bar_delete.Name = "bar_delete";
+            this.bar_delete.Size = new System.Drawing.Size(174, 22);
+            this.bar_delete.TabIndex = 11;
+            this.bar_delete.Value = 50;
             // 
             // num_up_dowm_delete
             // 
@@ -249,7 +264,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(55, 49);
+            this.label4.Location = new System.Drawing.Point(57, 51);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(29, 12);
             this.label4.TabIndex = 9;
@@ -257,7 +272,7 @@
             // 
             // btn_end
             // 
-            this.btn_end.Location = new System.Drawing.Point(141, 107);
+            this.btn_end.Location = new System.Drawing.Point(141, 118);
             this.btn_end.Name = "btn_end";
             this.btn_end.Size = new System.Drawing.Size(61, 33);
             this.btn_end.TabIndex = 3;
@@ -266,7 +281,7 @@
             // 
             // btn_delete
             // 
-            this.btn_delete.Location = new System.Drawing.Point(57, 107);
+            this.btn_delete.Location = new System.Drawing.Point(57, 118);
             this.btn_delete.Name = "btn_delete";
             this.btn_delete.Size = new System.Drawing.Size(61, 33);
             this.btn_delete.TabIndex = 2;
@@ -285,6 +300,7 @@
             this.Controls.Add(this.webser);
             this.Controls.Add(this.menuStrip1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.MaximizeBox = false;
             this.Name = "login_form";
@@ -327,6 +343,7 @@
         private System.Windows.Forms.Button btn_end;
         private System.Windows.Forms.Button btn_delete;
         private System.Windows.Forms.NumericUpDown num_up_dowm_delete;
+        private System.Windows.Forms.ProgressBar bar_delete;
     }
 }
 
