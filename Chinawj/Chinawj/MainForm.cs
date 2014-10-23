@@ -16,33 +16,7 @@ namespace LeShou
     public delegate void FlushClient();//代理
     public partial class login_form : Form
     {
-        private Dictionary<string, string> cookies = new Dictionary<string, string>();
 
-        public Object Cookies
-        {
-            get
-            {
-                string cookie = "";
-                foreach (string key in cookies.Keys)
-                {
-                    cookie += (key + "=" + cookies[key] + ";");
-                }
-                return cookie;
-            }
-            set
-            {
-                foreach (string key in ((Dictionary<string, string>)value).Keys)
-                {
-                    cookies[key] = ((Dictionary<string, string>)value)[key];
-                }
-            }
-        }
-        //System.Runtime.Serialization.Formatter;
-        private HtmlDocument loginform = null;
-        /// <summary>
-        /// 验证码地址
-        /// </summary>
-        private static string code_url = "";
         /// <summary>
         /// 登录页地址
         /// </summary>
@@ -55,10 +29,7 @@ namespace LeShou
         /// 删除页地址
         /// </summary>
         private static string delete_page_url = "http://my.chinawj.com.cn/member/logistics/?dc=1";
-        /// <summary>
-        /// 最大删除页面
-        /// </summary>
-        private static int max_delete_page_num = 999999999;
+
         /// <summary>
         /// 删除地址
         /// </summary>
@@ -81,8 +52,23 @@ namespace LeShou
             //CheckForIllegalCrossThreadCalls = false;
         }
 
-        /// <summary>
-        /// 序列化cookie python --> pickle
+
+        private void login_form_Load(object sender, EventArgs e)
+        {
+            //init();
+        }
+
+        private void btn_login_Click(object sender, EventArgs e)
+        {
+            login();
+        }
+
+        private void btn_delete_Click(object sender, EventArgs e)
+        {
+            delete();
+        }
+
+        /// <summary> 序列化cookie 等同python --> pickle
         /// </summary>
         public void DumpCookie()
         {
@@ -91,8 +77,8 @@ namespace LeShou
             b.Serialize(fileStream, cc);
             fileStream.Close();
         }
-        /// <summary>
-        /// 反序列化cookie DeSerialize
+
+        /// <summary> 反序列化cookie DeSerialize
         /// </summary>
         public void LoadCookie()
         {
@@ -111,39 +97,31 @@ namespace LeShou
                 }
             }
         }
+
+        /// <summary> 检查cookie
+        /// </summary>
         public void check_cookie()
         {
             //TODO:检查cookie是否可用
         }
 
-        private void login_form_Load(object sender, EventArgs e)
-        {
-            //init();
-        }
-
-        private void btn_login_Click(object sender, EventArgs e)
-        {
-            login();
-        }
-        /// <summary>
-        /// 删除
+        /// <summary> 删除
         /// </summary>
-        private void btn_delete_Click(object sender, EventArgs e)
+        public void delete()
         {
             Thread thread = new Thread(Delete_Flush_Thread);
             thread.IsBackground = true;
             thread.Start();
         }
 
-        /// <summary>
-        /// 登录
+        /// <summary> 登录
         /// </summary>
         public void login()
         {
             string USERID = this.tbx_userid.Text;
             string PWD = this.tbx_pwd.Text;
             byte[] data = Encoding.UTF8.GetBytes("UsernameGet=" + USERID + "&pwd=" + PWD + "&submit=");
-            byte[] response = RequestByCookie(login_url, (string)Cookies, false, data);
+            byte[] response = RequestByCookie(login_url, "", false, data);
             string html = BytesToString(response);
             if (html == "<script>top.location=\"http://my.chinawj.com.cn/member/index.php\"</script>")
             {
@@ -177,17 +155,15 @@ namespace LeShou
             //}
             return state;
         }
-        /// <summary>
-        /// 将字节列表 保存为图片
-        /// </summary>
-        //public void save_image_by_list_byte()
-        //{
-        //    byte[] byte_list = RequestByCookie(code_url, "");
-        //    File.WriteAllBytes(code_path, byte_list.ToArray());
-        //}
 
-        /// <summary>
-        /// request 请求
+        /// <summary> 将字节列表 保存为图片
+        /// </summary>
+        public void save_image_by_list_byte(byte[] byte_list, string path)
+        {
+            File.WriteAllBytes(path, byte_list.ToArray());
+        }
+
+        /// <summary> 模拟请求
         /// </summary>
         /// <param name="url">URL</param>
         /// <param name="cookie">Cookies值</param>
@@ -201,10 +177,6 @@ namespace LeShou
             webRequest.Credentials = System.Net.CredentialCache.DefaultCredentials;
             webRequest.MaximumResponseHeadersLength = -1;
             webRequest.CookieContainer = cc;
-            //if (cookie != "")
-            //{
-            //    webRequest.Headers.Add("cookie", cookie);
-            //}
             if (is_get == true) webRequest.Method = "GET";
             else webRequest.Method = "POST";
             webRequest.KeepAlive = true;
@@ -225,12 +197,6 @@ namespace LeShou
                     //webResponse.Cookies;
                     using (Stream stream = webResponse.GetResponseStream())
                     {
-                        Dictionary<string, string> cd = new Dictionary<string, string>();
-                        foreach (Cookie ck in webRequest.CookieContainer.GetCookies(new Uri("http://www.chinawj.com.cn/")))
-                        {
-                            cd.Add(ck.Name, ck.Value);
-                        }
-                        Cookies = cd;
                         while (true)
                         {
                             int data_b = stream.ReadByte();
@@ -238,25 +204,19 @@ namespace LeShou
                                 break;
                             list.Add((byte)data_b);
                         }
-                        //return BytesToImage(list.ToArray());
-                        //return System.Drawing.Image.FromFile(".code", true);
-                        //image = System.Drawing.Image.FromStream(stream, true, true);
-
                     }
                 }
             }
-            catch (WebException ex)
+            catch (WebException)
             {
-                throw;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw;
             }
             return list.ToArray();
         }
-        /// <summary>
-        /// Convert Byte[] to Image
+
+        /// <summary> Convert Byte[] to Image
         /// </summary>
         /// <param name="buffer"></param>
         /// <returns></returns>
@@ -267,27 +227,8 @@ namespace LeShou
             ms.Close();
             return image;
         }
-        public static byte[] DictionaryToBytes(Dictionary<string, string> parameters)
-        {
-            byte[] data = null;
-            StringBuilder buffer = new StringBuilder();
-            int i = 0;
-            foreach (string key in parameters.Keys)
-            {
-                if (i > 0)
-                {
-                    buffer.AppendFormat("&{0}={1}", key, parameters[key]);
-                }
-                else
-                {
-                    buffer.AppendFormat("{0}={1}", key, parameters[key]);
-                }
-                i++;
-            }
-            return Encoding.UTF8.GetBytes(buffer.ToString());
-        }
-        /// <summary>
-        /// Convert Byte[] to string
+
+        /// <summary> Convert Byte[] to string
         /// </summary>
         /// <param name="buffer"></param>
         /// <returns></returns>
@@ -297,19 +238,20 @@ namespace LeShou
             return result;
         }
 
-
-
+        /// <summary> 删除时，刷新线程
+        /// </summary>
         private void Delete_Flush_Thread()
         {
             while (true)
             {
                 int nead_delete_num = (int)this.num_up_dowm_delete.Value;
-                //GetWebBrowseCookie();
-                delete_data_by_num(nead_delete_num, (String)Cookies);
+                delete_data_by_num(nead_delete_num, "");
                 break;
             }
         }
 
+        /// <summary> 设置进度条状态
+        /// </summary>
         private void SetDeleteBarStatus()
         {
             if (this.bar_delete.InvokeRequired)
@@ -323,8 +265,7 @@ namespace LeShou
             }
         }
 
-        /// <summary>
-        /// 删除x条帖子
+        /// <summary> 删除x条帖子
         /// </summary>
         /// <param name="nead_delete_num"></param>
         /// <returns></returns>
@@ -352,8 +293,7 @@ namespace LeShou
             }
         }
 
-        /// <summary>
-        /// 删除某页的帖子
+        /// <summary> 删除某页的帖子
         /// </summary>
         /// <param name="page_num"></param>
         private int delete_data_by_page(int num = 30, string cookie = "")
@@ -369,8 +309,7 @@ namespace LeShou
             return delete_datas_by_ids(ids, cookie);
         }
 
-        /// <summary>
-        /// 正则 -- 匹配每页的帖子id
+        /// <summary> 正则 -- 获取每页的帖子id
         /// </summary>
         /// <param name="html">html string</param>
         /// <returns>list int</returns>
@@ -390,8 +329,8 @@ namespace LeShou
             }
             return result;
         }
-        /// <summary>
-        /// 根据id列表 删除帖子id[]:22678338
+
+        /// <summary> 根据id列表 删除帖子id[]:22678338
         /// </summary>
         /// <param name="ids"></param>
         /// <returns></returns>
@@ -417,10 +356,6 @@ namespace LeShou
             return result;
         }
 
-
     }
-
-
-
 
 }
