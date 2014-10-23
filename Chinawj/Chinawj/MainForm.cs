@@ -9,12 +9,35 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Net;
 using System.Threading;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace LeShou
 {
     public delegate void FlushClient();//代理
     public partial class login_form : Form
     {
+        private Dictionary<string, string> cookies = new Dictionary<string, string>();
+
+        public Object Cookies
+        {
+            get
+            {
+                string cookie = "";
+                foreach (string key in cookies.Keys)
+                {
+                    cookie += (key + "=" + cookies[key] + ";");
+                }
+                return cookie;
+            }
+            set
+            {
+                foreach (string key in ((Dictionary<string, string>)value).Keys)
+                {
+                    cookies[key] = ((Dictionary<string, string>)value)[key];
+                }
+            }
+        }
+        //System.Runtime.Serialization.Formatter;
         private HtmlDocument loginform = null;
         /// <summary>
         /// 验证码地址
@@ -47,71 +70,86 @@ namespace LeShou
         /// <summary>
         /// 验证码图片路径
         /// </summary>
-        private static string code_path = ".code";
-        private string cookie = "";
+        private static string cookie_path = ".co";
         private int bar_num = 0;
+        CookieContainer cc = new CookieContainer();
 
         public login_form()
         {
             InitializeComponent();
+            LoadCookie();
             //CheckForIllegalCrossThreadCalls = false;
         }
 
-        void Window_Error(object sender, HtmlElementErrorEventArgs e)
-        {
-            e.Handled = true;
-        }
-        /// <summary> 载入登录页面初始化
+        /// <summary>
+        /// 序列化cookie python --> pickle
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btn_open_Click(object sender, EventArgs e)
+        public void DumpCookie()
         {
-            web_loaction(login_page_url);
+            FileStream fileStream = new FileStream(cookie_path, FileMode.Create);
+            BinaryFormatter b = new BinaryFormatter();
+            b.Serialize(fileStream, cc);
+            fileStream.Close();
         }
+        /// <summary>
+        /// 反序列化cookie DeSerialize
+        /// </summary>
+        public void LoadCookie()
+        {
+            if (File.Exists(cookie_path))
+            {
+                FileStream fileStream = new FileStream(cookie_path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                BinaryFormatter b = new BinaryFormatter();
+                try
+                {
+                    cc = b.Deserialize(fileStream) as CookieContainer;
+                    fileStream.Close();
+                }
+                catch (System.Runtime.Serialization.SerializationException)
+                {
+                    check_cookie();
+                }
+            }
+        }
+        public void check_cookie()
+        {
+            //TODO:检查cookie是否可用
+        }
+
         private void login_form_Load(object sender, EventArgs e)
         {
-            init();
+            //init();
         }
 
-        /// <summary> 登录
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void btn_login_Click(object sender, EventArgs e)
         {
-            write_html();
             login();
         }
-        /// <summary> 浏览器导航
+        /// <summary>
+        /// 删除
         /// </summary>
-        public void web_loaction(string url)
+        private void btn_delete_Click(object sender, EventArgs e)
         {
-            this.webser.Navigate(url);
+            Thread thread = new Thread(Delete_Flush_Thread);
+            thread.IsBackground = true;
+            thread.Start();
         }
 
-        /// <summary>初始化登录页面，并且绘制验证码
+        /// <summary>
+        /// 登录
         /// </summary>
-        public void init()
-        {
-            web_loaction(login_page_url);
-        }
-
-
-        /// <summary> 填写html
-        /// </summary>
-        public void write_html()
+        public void login()
         {
             string USERID = this.tbx_userid.Text;
             string PWD = this.tbx_pwd.Text;
-            string CODE = this.tbx_code.Text;
-            if (loginform == null)
+            byte[] data = Encoding.UTF8.GetBytes("UsernameGet=" + USERID + "&pwd=" + PWD + "&submit=");
+            byte[] response = RequestByCookie(login_url, (string)Cookies, false, data);
+            string html = BytesToString(response);
+            if (html == "<script>top.location=\"http://my.chinawj.com.cn/member/index.php\"</script>")
             {
-                web_loaction(login_page_url);
+                DumpCookie();
+                MessageBox.Show("登录成功!");
             }
-            loginform.GetElementById("UsernameGet").SetAttribute("value", USERID);
-            loginform.GetElementById("password").SetAttribute("value", PWD);
-            //loginform.GetElementById("code").SetAttribute("value", CODE);
         }
 
         /// <summary>检查帐号 密码 验证码</summary>
@@ -139,71 +177,22 @@ namespace LeShou
             //}
             return state;
         }
-
-        /// <summary>
-        /// 登录
-        /// </summary>
-        public void login()
-        {
-
-            //HtmlElement check_remeber = loginform.GetElementsByTagName("input")[3];
-            //check_remeber.InvokeMember("Click");
-            HtmlElement btnAdd = loginform.GetElementsByTagName("input")[2];
-            btnAdd.InvokeMember("Click");
-        }
-        private void webser_Navigating(object sender, WebBrowserNavigatingEventArgs e)
-        {
-            //timer_load.Enabled = true;
-        }
-
-        private void timer_load_Tick(object sender, EventArgs e)
-        {
-            if (webser.ReadyState == WebBrowserReadyState.Complete && webser.IsBusy == false)
-            {
-                timer_load.Enabled = false;
-                if (webser.StatusText == "完成" && webser.Url.AbsoluteUri == login_page_url)
-                {
-                    load_img();
-                    tbx_userid.Focus();
-                    tbx_userid.SelectAll();
-                }
-            }
-        }
-        /// <summary>
-        /// 加载验证码
-        /// </summary>
-        private void load_img()
-        {
-            loginform = webser.Document.Forms[0].Document;
-            //save_image_by_list_byte();
-            //this.pic_code.ImageLocation = code_path;
-        }
-
-        private void webser_Navigated(object sender, WebBrowserNavigatedEventArgs e)
-        {
-            timer_load.Enabled = true;
-        }
-
-        private void pic_code_Click(object sender, EventArgs e)
-        {
-            load_img();
-        }
-
         /// <summary>
         /// 将字节列表 保存为图片
         /// </summary>
-        public void save_image_by_list_byte()
-        {
-            byte[] byte_list = RequestByCookie(code_url, webser.Document.Cookie);
-            File.WriteAllBytes(code_path, byte_list.ToArray());
-        }
+        //public void save_image_by_list_byte()
+        //{
+        //    byte[] byte_list = RequestByCookie(code_url, "");
+        //    File.WriteAllBytes(code_path, byte_list.ToArray());
+        //}
+
         /// <summary>
         /// request 请求
         /// </summary>
         /// <param name="url">URL</param>
         /// <param name="cookie">Cookies值</param>
         /// <param name="is_get">request maehod.is get? or false:post.</param>
-        public static byte[] RequestByCookie(string url, string cookie, bool is_get = true, byte[] data = null)
+        public byte[] RequestByCookie(string url, string cookie, bool is_get = true, byte[] data = null)
         {
             List<byte> list = new List<byte>();
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
@@ -211,34 +200,37 @@ namespace LeShou
             webRequest.AllowWriteStreamBuffering = true;
             webRequest.Credentials = System.Net.CredentialCache.DefaultCredentials;
             webRequest.MaximumResponseHeadersLength = -1;
-            webRequest.Headers.Add("cookie", cookie);
+            webRequest.CookieContainer = cc;
+            //if (cookie != "")
+            //{
+            //    webRequest.Headers.Add("cookie", cookie);
+            //}
             if (is_get == true) webRequest.Method = "GET";
             else webRequest.Method = "POST";
             webRequest.KeepAlive = true;
             if (is_get == false && data != null)
             {
-                try
+                webRequest.ContentType = "application/x-www-form-urlencoded";
+                //写入请求流
+                using (Stream stream = webRequest.GetRequestStream())
                 {
-                    //写入请求流
-                    using (Stream stream = webRequest.GetRequestStream())
-                    {
-                        stream.Write(data, 0, data.Length);
-                    }
+                    stream.Write(data, 0, data.Length);
                 }
-                catch (Exception)
-                {
-
-                }
-
             }
             try
             {
                 //获取服务器返回的资源
                 using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
                 {
+                    //webResponse.Cookies;
                     using (Stream stream = webResponse.GetResponseStream())
                     {
-
+                        Dictionary<string, string> cd = new Dictionary<string, string>();
+                        foreach (Cookie ck in webRequest.CookieContainer.GetCookies(new Uri("http://www.chinawj.com.cn/")))
+                        {
+                            cd.Add(ck.Name, ck.Value);
+                        }
+                        Cookies = cd;
                         while (true)
                         {
                             int data_b = stream.ReadByte();
@@ -255,11 +247,11 @@ namespace LeShou
             }
             catch (WebException ex)
             {
-
+                throw;
             }
             catch (Exception ex)
             {
-
+                throw;
             }
             return list.ToArray();
         }
@@ -305,21 +297,15 @@ namespace LeShou
             return result;
         }
 
-        private void btn_delete_Click(object sender, EventArgs e)
-        {
 
-            Thread thread = new Thread(Delete_Flush_Thread);
-            thread.IsBackground = true;
-            thread.Start();
-        }
 
         private void Delete_Flush_Thread()
         {
             while (true)
             {
                 int nead_delete_num = (int)this.num_up_dowm_delete.Value;
-                GetWebBrowseCookie();
-                delete_data_by_num(nead_delete_num, cookie);
+                //GetWebBrowseCookie();
+                delete_data_by_num(nead_delete_num, (String)Cookies);
                 break;
             }
         }
@@ -336,18 +322,7 @@ namespace LeShou
                 this.bar_delete.Value = bar_num;
             }
         }
-        private void GetWebBrowseCookie()
-        {
-            if (this.webser.InvokeRequired)
-            {
-                FlushClient fc = new FlushClient(GetWebBrowseCookie);
-                this.Invoke(fc);
-            }
-            else
-            {
-                cookie = this.webser.Document.Cookie;
-            }
-        }
+
         /// <summary>
         /// 删除x条帖子
         /// </summary>
@@ -410,8 +385,8 @@ namespace LeShou
             }
             foreach (int eachString in l_int)
             {
-                if (!l_int.Contains(eachString))
-                    l_int.Add(eachString);
+                if (!result.Contains(eachString))
+                    result.Add(eachString);
             }
             return result;
         }
@@ -442,14 +417,6 @@ namespace LeShou
             return result;
         }
 
-        private void btn_test_Click(object sender, EventArgs e)
-        {
-            string USERID = this.tbx_userid.Text;
-            string PWD = this.tbx_pwd.Text;
-            byte[] data = Encoding.UTF8.GetBytes("UsernameGet=" + USERID + "&pwd=" + PWD + "&submit=");
-            byte[] response = RequestByCookie(login_url, cookie, false, data);
-            string html = BytesToString(response);
-        }
 
     }
 
