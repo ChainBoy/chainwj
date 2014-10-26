@@ -823,7 +823,7 @@ namespace ChinaWJ
             byte[] response = RequestByCookie(url);
             //byte[] response = RequestByCookie(delete_url, cookie, false, Encoding.UTF8.GetBytes(id_str));
             string html = bytes_to_string(response);
-            MatchCollection match_nid = Regex.Matches(html, @"操作(\d)条成功", RegexOptions.Singleline);
+            MatchCollection match_nid = Regex.Matches(html, @"操作(\d+)条成功", RegexOptions.Singleline);
             for (int i = 0; i < match_nid.Count; i++)
             {
                 result += Convert.ToInt32(match_nid[i].Groups[1].Value);
