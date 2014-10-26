@@ -7,7 +7,7 @@ using System.Resources;
 // 特性集控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("Chinaj")]
-[assembly: AssemblyDescription("Chinawj_aotu")]
+[assembly: AssemblyDescription("author:Zhipeng Zhang Email:qq1126918258@gmail.com")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("ChainBoy")]
 [assembly: AssemblyProduct("Chinawj")]
@@ -33,6 +33,6 @@ using System.Resources;
 // 可以指定所有这些值，也可以使用“内部版本号”和“修订号”的默认值，
 // 方法是按如下所示使用“*”:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.0.1")]
+[assembly: AssemblyFileVersion("1.0.0.1")]
 [assembly: NeutralResourcesLanguageAttribute("zh-CN")]
